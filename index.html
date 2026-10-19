@@ -1,15 +1,267 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Redirecting…</title>
-  <link rel="canonical" href="https://radio.cybergistplanet.com/">
-  <script>
-    location.replace("https://radio.cybergistplanet.com" + location.pathname + location.search + location.hash);
-  </script>
-  <meta http-equiv="refresh" content="0; url=https://radio.cybergistplanet.com/">
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; media-src *; connect-src 'self' https://*.api.radio-browser.info; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Redio Life · Nigerian radio</title>
+<meta name="theme-color" content="#3B2414">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📻</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Limelight&family=Barlow+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --wall:#6E8E89; --wall-shade:#557570;
+  --walnut:#6A4426; --walnut-dark:#3B2414; --walnut-light:#8A5C35;
+  --ink:#2C1B0F; --brass:#D2AA62; --brass-dark:#7A5A26;
+  --eye:#5DF08C; --hint:#F4EEDF; --amber:#E9C77A; --glow:#F3DC9B;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --wall:#1F2C2A; --wall-shade:#141D1C; --hint:#CFC6B2; }
+}
+:root[data-theme="dark"]{ --wall:#1F2C2A; --wall-shade:#141D1C; --hint:#CFC6B2; }
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%}
+body{
+  margin:0;min-height:100%;
+  background:radial-gradient(ellipse at 50% 30%, var(--wall), var(--wall-shade));
+  font-family:"Barlow Condensed","Arial Narrow",sans-serif;color:var(--ink);
+}
+.room{min-height:100vh;display:grid;justify-items:center;align-content:start;gap:18px;padding:24px 14px}
+.radio{
+  width:min(100%,680px);padding:18px;border-radius:30px 30px 16px 16px;
+  background:
+    repeating-linear-gradient(92deg, rgba(0,0,0,.08) 0 2px, transparent 2px 9px, rgba(255,255,255,.04) 9px 11px, transparent 11px 23px),
+    linear-gradient(180deg,var(--walnut-light),var(--walnut) 40%,var(--walnut-dark));
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.18), inset 0 -6px 12px rgba(0,0,0,.35), 0 30px 60px rgba(0,0,0,.35);
+}
+/* Now-playing panel */
+.frame{padding:9px;border-radius:14px;background:linear-gradient(180deg,#EBCB86,var(--brass) 40%,var(--brass-dark));box-shadow:0 2px 4px rgba(0,0,0,.4)}
+.face{
+  display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:8px;
+  background:#B8AC8C;box-shadow:inset 0 3px 10px rgba(0,0,0,.35);transition:background .6s, box-shadow .6s;
+}
+.radio[data-on="true"] .face{
+  background:radial-gradient(ellipse at 50% 65%, #FFF0C2, #F3CD6E 55%, #D9A445);
+  box-shadow:inset 0 3px 10px rgba(0,0,0,.25), inset 0 0 40px rgba(255,170,40,.55);
+}
+.eye{
+  --gap:120deg;flex:none;width:52px;height:52px;border-radius:50%;
+  background:radial-gradient(circle,#2A2A22 0 20%,transparent 21%),#2F332C;
+  box-shadow:0 0 0 4px var(--brass-dark),inset 0 0 8px #000;transition:box-shadow .3s;
+}
+.radio[data-on="true"] .eye{
+  background:
+    radial-gradient(circle,#1C2A1E 0 20%,transparent 21%),
+    conic-gradient(#0E1C12 0 calc(var(--gap)/2), var(--eye) calc(var(--gap)/2) calc(360deg - var(--gap)/2), #0E1C12 calc(360deg - var(--gap)/2));
+  box-shadow:0 0 0 4px var(--brass-dark),inset 0 0 8px #000,0 0 14px rgba(93,240,140,.45);
+}
+.now{flex:1;min-width:0}
+.badge{font-family:Limelight,Georgia,serif;font-size:15px;color:var(--brass-dark);letter-spacing:.02em}
+.now-name{font-size:30px;font-weight:600;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now-line{font-size:17px;line-height:1.2;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Controls */
+.controls{display:flex;align-items:center;gap:14px;margin-top:16px}
+.knob-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;color:#EED9A8;font-size:14px}
+.knob{
+  position:relative;width:62px;height:62px;border-radius:50%;cursor:grab;touch-action:none;
+  background:radial-gradient(circle at 35% 30%,#F3DCA4,var(--brass) 45%,var(--brass-dark));
+  box-shadow:0 5px 9px rgba(0,0,0,.5),inset 0 -3px 6px rgba(0,0,0,.35);
+}
+.knob:active{cursor:grabbing}
+.knob::before{content:"";position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(rgba(0,0,0,.17) 0 3deg,transparent 3deg 9deg)}
+.knob .cap{position:absolute;inset:12px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#F8E7BC,#B88E46)}
+.knob .mark{position:absolute;left:50%;top:5px;width:4px;height:14px;margin-left:-2px;border-radius:2px;background:var(--walnut-dark)}
+.keys{flex:1;display:flex;gap:7px;min-width:0}
+.key{
+  flex:1;min-width:0;height:48px;border:none;border-radius:4px 4px 9px 9px;cursor:pointer;
+  font:600 15px "Barlow Condensed","Arial Narrow",sans-serif;color:var(--ink);
+  background:linear-gradient(#FBF4E2,#D8C9A4);box-shadow:0 5px 0 #8A7752,0 7px 9px rgba(0,0,0,.4);
+  transition:transform .08s, box-shadow .08s;
+}
+.key:active,.key[aria-pressed="true"]{transform:translateY(4px);box-shadow:0 1px 0 #8A7752,0 2px 4px rgba(0,0,0,.4)}
+.key.wide{flex:1.4}
+.key.power{flex:1.3;background:linear-gradient(#C9493D,#8F2B22);color:#FBEBD5;box-shadow:0 5px 0 #5A1A14,0 7px 9px rgba(0,0,0,.4)}
+.key.power[aria-pressed="true"]{box-shadow:0 1px 0 #5A1A14,0 2px 4px rgba(0,0,0,.4)}
+:focus-visible{outline:3px solid #FFE08A;outline-offset:3px}
+/* Station grid */
+.tools{display:flex;gap:8px;margin-top:20px}
+.find{
+  flex:1;min-width:0;padding:10px 12px;border:none;border-radius:8px;
+  font:500 18px "Barlow Condensed","Arial Narrow",sans-serif;color:var(--glow);
+  background:var(--walnut-dark);box-shadow:inset 0 2px 5px rgba(0,0,0,.6);
+}
+.find::placeholder{color:rgba(243,220,155,.45)}
+.tools .key{flex:0 0 auto;padding:0 14px;height:44px}
+.group-title{margin:18px 2px 8px;font-size:18px;font-weight:600;color:#EED9A8;display:flex;justify-content:space-between;gap:8px}
+.group-title small{font-weight:500;opacity:.7;font-size:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.tile{position:relative}
+.tile .play{
+  display:block;width:100%;height:64px;padding:8px 30px 8px 10px;border:none;border-radius:8px;cursor:pointer;text-align:left;
+  font-family:inherit;color:var(--amber);background:var(--walnut-dark);box-shadow:inset 0 2px 5px rgba(0,0,0,.6);
+  -webkit-touch-callout:none;user-select:none;touch-action:manipulation;
+}
+.tile .play b{display:block;font-size:21px;font-weight:600;line-height:1}
+.tile .play span{display:block;margin-top:4px;font-size:15px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.85}
+.tile .star{
+  position:absolute;top:2px;right:2px;width:36px;height:36px;border:none;border-radius:8px;cursor:pointer;
+  background:none;color:rgba(233,199,122,.5);font-size:20px;line-height:1;
+}
+.tile .star[aria-pressed="true"]{color:#FFD45C}
+.tile.current .play{background:radial-gradient(ellipse at 50% 65%, #FFF0C2, #F3CD6E 55%, #D9A445);color:var(--ink);box-shadow:inset 0 2px 5px rgba(0,0,0,.25),0 0 0 2px #FFE08A}
+.tile.current .star{color:rgba(44,27,15,.45)}
+.tile.current .star[aria-pressed="true"]{color:#8F2B22}
+.tile.down .play span::after{content:" · down";opacity:.8}
+.tile.down:not(.current) .play{opacity:.55}
+.tile.nostream .play{opacity:.6;height:56px}
+.tile.nostream .play span::after{content:" · add link"}
+.eq{position:absolute;right:12px;bottom:10px;display:none;gap:2px;align-items:flex-end;height:14px}
+.tile.live .eq{display:flex}
+.eq i{width:3px;background:var(--ink);border-radius:1px;animation:eq 1s ease-in-out infinite}
+.eq i:nth-child(2){animation-delay:-.4s}.eq i:nth-child(3){animation-delay:-.7s}
+@keyframes eq{0%,100%{height:4px}50%{height:14px}}
+details.more{margin-top:18px}
+details.more summary{cursor:pointer;color:#EED9A8;font-size:18px;font-weight:600;padding:4px 2px}
+details.more .grid{margin-top:8px}
+.empty{grid-column:1/-1;margin:0;color:#EED9A8;opacity:.8;font-size:17px}
+.hint{max-width:46ch;margin:0;text-align:center;color:var(--hint);font-size:17px;line-height:1.35}
+.toast{
+  position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,10px);
+  max-width:calc(100% - 32px);padding:10px 16px;border-radius:10px;background:#2C1B0F;color:var(--glow);
+  font-size:17px;box-shadow:0 8px 20px rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:5;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+/* Add-a-station sheet */
+.sheet{
+  width:min(calc(100% - 32px),420px);max-height:calc(100% - 32px);padding:18px;border:none;border-radius:16px;
+  background:linear-gradient(180deg,var(--walnut-light),var(--walnut) 40%,var(--walnut-dark));color:var(--glow);
+  font-family:"Barlow Condensed","Arial Narrow",sans-serif;box-shadow:0 20px 50px rgba(0,0,0,.5);
+}
+.sheet::backdrop{background:rgba(20,12,6,.6)}
+.sheet h2{margin:0 0 12px;font:400 24px Limelight,Georgia,serif;color:var(--brass)}
+.sheet h3{margin:16px 0 6px;font-size:18px;font-weight:600}
+.sheet label{display:block;margin-bottom:10px;font-size:17px;font-weight:600}
+.sheet label em{font-style:normal;font-weight:500;opacity:.7}
+.sheet input{
+  display:block;width:100%;margin-top:4px;padding:9px 10px;border:none;border-radius:6px;
+  font:500 18px "Barlow Condensed","Arial Narrow",sans-serif;color:var(--glow);background:var(--walnut-dark);box-shadow:inset 0 2px 5px rgba(0,0,0,.6);
+}
+.sheet input::placeholder{color:rgba(243,220,155,.4)}
+.sheet-msg{min-height:1.2em;margin:0 0 8px;font-size:16px;color:#FFD08A}
+.sheet-btns{display:flex;gap:7px}
+.sheet-btns .key{margin-bottom:6px}
+.mine{list-style:none;margin:0;padding:0}
+.mine li{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid rgba(255,255,255,.12);font-size:17px}
+.mine li span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mine button{border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font:600 15px "Barlow Condensed","Arial Narrow",sans-serif;background:var(--walnut-dark);color:var(--amber)}
+@media (max-width:560px){
+  .room{padding:16px 12px}
+  .radio{padding:14px;border-radius:24px 24px 14px 14px}
+  .face{padding:10px 12px;gap:12px}
+  .eye{width:44px;height:44px}
+  .now-name{font-size:26px}
+  .controls{gap:10px}
+  .knob{width:54px;height:54px}
+  .knob .cap{inset:10px}
+  .keys{gap:5px}
+  .key{font-size:14px;height:44px}
+  .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .tile .play{height:60px;padding:7px 26px 7px 8px}
+  .tile .play b{font-size:19px}
+  .tile .play span{font-size:14px}
+  .tile .star{width:30px;height:30px;font-size:18px}
+}
+@media (prefers-reduced-motion: reduce){ .face,.eye,.key{transition:none} .eq i{animation:none;height:10px} }
+
+.tabs{display:flex;gap:6px;margin-top:16px}
+.tab{
+  flex:1;height:42px;border:none;border-radius:8px 8px 4px 4px;cursor:pointer;
+  font:600 17px "Barlow Condensed","Arial Narrow",sans-serif;color:var(--amber);background:var(--walnut-dark);
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.6);
+}
+.tab[aria-selected="true"]{color:var(--ink);background:linear-gradient(180deg,#F3DCA4,var(--brass) 55%,var(--brass-dark));box-shadow:0 2px 4px rgba(0,0,0,.45)}
+.region-title{margin:24px 2px 0;font:400 22px Limelight,Georgia,serif;color:var(--brass);display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.region-title small{font:500 16px "Barlow Condensed","Arial Narrow",sans-serif;color:#EED9A8;opacity:.75}
+.state-title{margin:12px 2px 6px;font-size:17px;font-weight:600;color:#EED9A8;opacity:.9}
+.tile .play b.word{font-size:17px}
+</style>
 </head>
 <body>
-  <a href="https://radio.cybergistplanet.com/">Continue to radio.cybergistplanet.com</a>
+<main class="room">
+  <div class="radio" id="radio" data-on="false">
+    <div class="frame">
+      <div class="face">
+        <div class="eye" id="eye" title="Tuning eye: it closes when a station comes in clear"></div>
+        <div class="now" aria-live="polite">
+          <div class="badge">Redio Life</div>
+          <div class="now-name" id="nowName">Pick a station</div>
+          <div class="now-line" id="nowLine">Off</div>
+        </div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="knob-wrap">
+        <div class="knob" id="volKnob" role="slider" tabindex="0" aria-label="Volume" aria-valuemin="0" aria-valuemax="100"><div class="cap"></div><div class="mark"></div></div>
+        Volume
+      </div>
+      <div class="keys">
+        <button class="key" id="prev" aria-label="Previous station">◀</button>
+        <button class="key wide" id="scan" aria-pressed="false">Scan</button>
+        <button class="key" id="next" aria-label="Next station">▶</button>
+        <button class="key power" id="power" aria-pressed="false">On / off</button>
+      </div>
+    </div>
+    <div class="tools">
+      <input class="find" id="find" type="search" placeholder="Find a station, town or frequency" autocomplete="off" aria-label="Find a station">
+      <button class="key" id="addBtn">+ Add</button>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="tabLagos" aria-selected="true">Lagos corner</button>
+      <button class="tab" role="tab" id="tabNigeria" aria-selected="false">Across Nigeria</button>
+    </div>
+    <section id="favBox" hidden>
+      <h2 class="group-title">★ Favourites <small id="favCount"></small></h2>
+      <div class="grid" id="favGrid"></div>
+    </section>
+    <div id="pageBox"></div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <dialog class="sheet" id="sheet" aria-labelledby="sheetTitle">
+    <form method="dialog" id="sheetForm" novalidate>
+      <h2 id="sheetTitle">Add a station</h2>
+      <label>Frequency (88.0 to 108.0)
+        <input id="inFreq" inputmode="decimal" autocomplete="off" placeholder="e.g. 101.1" required>
+      </label>
+      <label>Station name <em>for a new station</em>
+        <input id="inName" maxlength="40" autocomplete="off" placeholder="e.g. Naija FM">
+      </label>
+      <label>Stream link <em>optional for a new station; leave blank and Redio Life will search for one</em>
+        <input id="inUrl" type="url" inputmode="url" autocomplete="off" placeholder="https://…">
+      </label>
+      <p class="sheet-msg" id="sheetMsg" role="alert"></p>
+      <div class="sheet-btns">
+        <button type="button" class="key" id="sheetCancel">Cancel</button>
+        <button type="submit" class="key wide" id="sheetAdd">Save</button>
+      </div>
+      <div id="mineBox" hidden>
+        <h3>Your stations and links</h3>
+        <ul class="mine" id="mine"></ul>
+      </div>
+    </form>
+  </dialog>
+  <p class="hint">Tap a station to play it, and tap it again to switch off. Tap ☆ to keep it in Favourites at the top. Lagos corner has Lagos stations; Across Nigeria has the rest, by region and state. ◀ and ▶ go to the previous or next station, and Scan plays each one for 12 seconds. Tap + Add to add a Lagos station you know or paste a stream link.</p>
+</main>
+
+<script src="stations.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
